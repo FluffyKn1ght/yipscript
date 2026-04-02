@@ -1,3 +1,3 @@
 # yipscript
 
-script lang 👍
+script lang thingamajig 👍
