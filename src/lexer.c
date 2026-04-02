@@ -298,7 +298,6 @@ void yip_lexer_lex(const char* src, void** out) {
                     CLEAR_BUF();
                     lexer.src_offset++;
                     _buf_read_until_char('"');
-                    printf("'%s'\n", lexer.buffer);
                     _push_token(YIP_TOKEN_LIT_STRING, true);
                     break;
                 }
@@ -306,7 +305,7 @@ void yip_lexer_lex(const char* src, void** out) {
                     CLEAR_BUF();
                     lexer.src_offset++;
                     _buf_read_until_char('"');
-                    printf("'%s'\n", lexer.buffer);
+                    _push_token(YIP_TOKEN_LIT_STRING, true);
                     break;
                 }
             }
