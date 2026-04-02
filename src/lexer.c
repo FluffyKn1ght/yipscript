@@ -131,11 +131,18 @@ char* yip_lexer_get_identtable_string(char* idtable_data, int idx);
 static void _push_ident() {
     bool is_in_identbuf = false;
     uint32_t i;
+    char* ident = NULL;
     for (i = 0; i < lexer.ident_buf_idents; i++) {
-        if (strcmp(yip_lexer_get_identtable_string(lexer.ident_buf, i), lexer.buffer) == 0) {
+        ident = yip_lexer_get_identtable_string(lexer.ident_buf, i);
+        if (strcmp(ident, lexer.buffer) == 0) {
             is_in_identbuf = true;
             break;
         }
+        free(ident);
+        ident = NULL;
+    }
+    if (ident) {
+        free(ident);
     }
 
     if (!is_in_identbuf) {
@@ -153,10 +160,10 @@ static void _push_ident() {
         lexer.last_ident_end += ident_size + 1;
     }
 
-    yip_lexer_token_t* ident = arena_alloc(lexer.output_ptr, sizeof(yip_lexer_token_t) + sizeof(uint32_t) + 1);
-    ident->type = YIP_TOKEN_IDENTIFIER;
-    memcpy(ident->data, &i, sizeof(uint32_t));
-    ident->data[sizeof(uint32_t)] = YIP_TOKEN_DATATERM;
+    yip_lexer_token_t* ident_tkn = arena_alloc(lexer.output_ptr, sizeof(yip_lexer_token_t) + sizeof(uint32_t) + 1);
+    ident_tkn->type = YIP_TOKEN_IDENTIFIER;
+    memcpy(ident_tkn->data, &i, sizeof(uint32_t));
+    ident_tkn->data[sizeof(uint32_t)] = YIP_TOKEN_DATATERM;
 }
 
 void yip_lexer_lex(const char* src, void** out) {
