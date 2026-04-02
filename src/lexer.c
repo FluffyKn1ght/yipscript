@@ -331,32 +331,17 @@ char* yip_lexer_get_identtable_string(char* idtable_data, int idx) {
         lexer.identtbl_last_idx = 0;
     }
 
-    int curidx = idx >= lexer.identtbl_last_idx ? idx : 0;
-    uintptr_t offset = lexer.identtbl_last_offset;
+    int curidx = idx >= lexer.identtbl_last_idx ? lexer.identtbl_last_idx : 0;
+    uintptr_t offset = idx >= lexer.identtbl_last_idx ? lexer.identtbl_last_offset : 0;
     while (curidx < idx) {
         if ((uint8_t)idtable_data[offset] == YIP_TOKEN_DATATERM) {
             goto fail;
         } else if (idtable_data[offset] == '\0') {
             curidx++;
         }
-
         offset++;
     }
-
-    uintptr_t start = (uintptr_t)offset;
-    uint64_t size = 0;
-    while (true) {
-        if ((uint8_t)idtable_data[start + size] == 0xFF) {
-            goto fail;
-        } else if (idtable_data[start + size] == '\0') {
-            break;
-        }
-        size++;
-    }
-
-    char* buf = malloc(size + 1);
-    strcpy(buf, idtable_data + start);
-    return buf;
+    return strdup(idtable_data + offset);
 
     fail:
     lexer.identtbl_last_buf = NULL;
