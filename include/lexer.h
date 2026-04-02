@@ -1,0 +1,77 @@
+#ifndef _YIPSCRIPT_LEXER_H
+#define _YIPSCRIPT_LEXER_H
+
+#include <stdint.h>
+
+typedef enum: uint8_t {
+    YIP_TOKEN_IDENTIFIER = 0x00,
+    YIP_TOKEN_SEMICOLON = 0x01,
+    YIP_TOKEN_COLON = 0x02,
+    YIP_TOKEN_DOT = 0x03,
+    YIP_TOKEN_BRACKET_OPEN = 0x04,
+    YIP_TOKEN_BRACKET_CLOSED = 0x05,
+    YIP_TOKEN_SQUAREBRACKET_OPEN = 0x06,
+    YIP_TOKEN_SQUAREBRACKET_CLOSED = 0x07,
+    YIP_TOKEN_CURLYBRACKET_OPEN = 0x08,
+    YIP_TOKEN_CURLYBRACKET_CLOSED = 0x09,
+    YIP_TOKEN_COMMA = 0x0A,
+    YIP_TOKEN_QUESTIONMARK = 0x0B,
+    YIP_TOKEN_EXCLAMATIONMARK = 0x0C,
+    YIP_TOKEN_ATSYMBOL = 0x0D,
+    YIP_TOKEN_HASHTAG = 0x0E,
+
+    //YIP_TOKEN_LIT_NULL = 0x10,
+    YIP_TOKEN_LIT_NUMBER = 0x11,
+    YIP_TOKEN_LIT_STRING = 0x12,
+    //YIP_TOKEN_LIT_BOOL_TRUE = 0x13,
+    //YIP_TOKEN_LIT_BOOL_FALSE = 0x14,
+
+    //YIP_TOKEN_NEWLINE = 0x20,
+    //YIP_TOKEN_LINECONT = 0x21, // aka '\'
+    //YIP_TOKEN_TAB = 0x22,
+
+    YIP_TOKEN_PLUS = 0x30,
+    YIP_TOKEN_MINUS = 0x31,
+    YIP_TOKEN_STAR = 0x32,
+    YIP_TOKEN_SLASH = 0x33,
+    //YIP_TOKEN_PLUSPLUS = 0x34, // ++
+    //YIP_TOKEN_MINUSMINUS = 0x35, // --
+    YIP_TOKEN_CARET = 0x36, // ^ (bitwise XOR)
+    YIP_TOKEN_AMPERSAND = 0x37, // & (bitwise AND)
+    YIP_TOKEN_PIPE = 0x38, // | (bitwise OR)
+    YIP_TOKEN_TILDE = 0x39, // ~ (bitwise NOT aka 'n XOR n')
+    YIP_TOKEN_EQUALS = 0x3A,
+    //YIP_TOKEN_IMMMARKER = 0x3B,
+
+    YIP_TOKEN_KW_VAR = 0x40,
+    YIP_TOKEN_KW_CONST = 0x41,
+    YIP_TOKEN_KW_IF = 0x42,
+    YIP_TOKEN_KW_ELSE = 0x43,
+    YIP_TOKEN_KW_FUNC = 0x44,
+    YIP_TOKEN_KW_CLASS = 0x45,
+    YIP_TOKEN_KW_IS = 0x46,
+    YIP_TOKEN_KW_IN = 0x47,
+    YIP_TOKEN_KW_FOR = 0x48,
+    YIP_TOKEN_KW_WHILE = 0x49,
+    YIP_TOKEN_KW_REPEAT = 0x4A,
+    YIP_TOKEN_KW_CONTINUE = 0x4B,
+    YIP_TOKEN_KW_BREAK = 0x4C,
+    YIP_TOKEN_KW_STATIC = 0x4D,
+    YIP_TOKEN_KW_ENUM = 0x4E,
+    YIP_TOKEN_KW_RETURN = 0x4F,
+
+    YIP_TOKEN_NOP = 0xF0,
+    YIP_TOKEN_IDENTTABLE = 0xF1,
+    YIP_TOKEN_EOF = 0xFA,
+    YIP_TOKEN_DATATERM = 0xFF
+} yip_lexer_token_type_t;
+
+typedef struct {
+    yip_lexer_token_type_t type;
+    char data[]; // 0xFF-terminated
+} yip_lexer_token_t;
+
+void yip_lexer_lex(const char* src, void** out);
+uintptr_t yip_lexer_gettoken(yip_lexer_token_t** token_ptr);
+
+#endif

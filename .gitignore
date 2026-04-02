@@ -1,0 +1,7 @@
+**/.clangd
+**/bin/
+**/build/
+*.o
+*.so
+*.a
+*.yip
