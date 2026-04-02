@@ -1,6 +1,7 @@
 #include "align.h"
 #include "arena.h"
 #include "lexer.h"
+#include "parser.h"
 #include <assert.h>
 #include <errno.h>
 #include <signal.h>
@@ -38,13 +39,19 @@ int main(int argc, char** argv) {
     void* tokens = NULL;
     yip_lexer_lex(buf, &tokens);
 
+    free(buf);
+
     FILE* out = fopen("out.lex", "w");
     assert(out != NULL);
     fwrite(tokens, 1, arena_sizeof(tokens), out);
     fclose(out);
 
+    yip_parser_ast_node_t* ast = NULL;
+    yip_parser_message_t* parser_msg = NULL;
+
+    yip_parser_parse(tokens, &ast, &parser_msg);
+
     arena_free(tokens);
-    free(buf);
 
     return 0;
 }
