@@ -18,18 +18,12 @@ typedef struct {
     char* buffer;
     uintptr_t buf_capacity;
 
-    char* ident_buf;
-    uintptr_t ident_buf_capacity;
-    uint32_t ident_buf_idents;
-    uintptr_t last_ident_end;
+    char** data_buf;
+    uint32_t data_size;
 
     void** output_ptr;
 
     bool last_tkn_was_nop;
-
-    char* identtbl_last_buf;
-    uintptr_t identtbl_last_offset;
-    uintptr_t identtbl_last_idx;
 } yip_lexer;
 static yip_lexer lexer = {};
 
@@ -116,54 +110,32 @@ static void _buf_read_until_char(char c) {
 static void _push_token(yip_lexer_token_type_t type, bool include_buffer) {
     yip_lexer_token_t* tkn = arena_alloc(
         lexer.output_ptr,
-        sizeof(yip_lexer_token_t) + (include_buffer ? strlen(lexer.buffer) + 2 : 1)
+        sizeof(yip_lexer_token_t) + (include_buffer ? sizeof(char*) : 0)
     );
     tkn->type = type;
     if (include_buffer) {
-        strcpy(tkn->data, lexer.buffer);
-        tkn->data[strlen(lexer.buffer) + 1] = YIP_TOKEN_DATATERM;
+        char* buf_str = strdup(lexer.buffer);
+        bool found = false;
+        int i;
+        for (i = 0; i < lexer.data_size; i++) {
+            if (strcmp(lexer.data_buf[i], buf_str) == 0) {
+                found = true;
+                return;
+            }
+        }
+
+        if (!found) {
+            lexer.data_size++;
+            arena_alloc((void**)&lexer.data_buf, sizeof(char*));
+            lexer.data_buf[i] = buf_str;
+        } else {
+            free(buf_str);
+        }
+
+        tkn->data = lexer.data_buf[i];
     } else {
-        tkn->data[0] = YIP_TOKEN_DATATERM;
+        tkn->data = NULL;
     }
-}
-
-char* yip_lexer_get_identtable_string(char* idtable_data, int idx);
-static void _push_ident() {
-    bool is_in_identbuf = false;
-    uint32_t i;
-    char* ident = NULL;
-    for (i = 0; i < lexer.ident_buf_idents; i++) {
-        ident = yip_lexer_get_identtable_string(lexer.ident_buf, i);
-        if (strcmp(ident, lexer.buffer) == 0) {
-            is_in_identbuf = true;
-            break;
-        }
-        free(ident);
-        ident = NULL;
-    }
-    if (ident) {
-        free(ident);
-    }
-
-    if (!is_in_identbuf) {
-        uint64_t ident_size = strlen(lexer.buffer);
-
-        if (lexer.ident_buf_capacity < lexer.last_ident_end + ident_size + 1) {
-            lexer.ident_buf_capacity += (ident_size + 1 > 64 ? ident_size + 1 : 64);
-            lexer.ident_buf = realloc(lexer.ident_buf, lexer.ident_buf_capacity);
-            assert(lexer.ident_buf != NULL);
-        }
-
-        strcpy(lexer.ident_buf + lexer.last_ident_end, lexer.buffer);
-        i = lexer.ident_buf_idents;
-        lexer.ident_buf_idents++;
-        lexer.last_ident_end += ident_size + 1;
-    }
-
-    yip_lexer_token_t* ident_tkn = arena_alloc(lexer.output_ptr, sizeof(yip_lexer_token_t) + sizeof(uint32_t) + 1);
-    ident_tkn->type = YIP_TOKEN_IDENTIFIER;
-    memcpy(ident_tkn->data, &i, sizeof(uint32_t));
-    ident_tkn->data[sizeof(uint32_t)] = YIP_TOKEN_DATATERM;
 }
 
 void yip_lexer_lex(const char* src, void** out) {
@@ -173,8 +145,8 @@ void yip_lexer_lex(const char* src, void** out) {
     if (lexer.buffer) {
         free(lexer.buffer);
     }
-    if (lexer.ident_buf) {
-        free(lexer.ident_buf);
+    if (lexer.data_buf) {
+        arena_free(lexer.data_buf);
     }
 
     memset(&lexer, 0, sizeof(yip_lexer));
@@ -187,10 +159,6 @@ void yip_lexer_lex(const char* src, void** out) {
     lexer.src = malloc(lexer.src_length);
     assert(lexer.src != NULL);
     memcpy(lexer.src, src, lexer.src_length);
-
-    lexer.ident_buf_capacity = 64;
-    lexer.ident_buf = calloc(64, lexer.ident_buf_capacity);
-    assert(lexer.ident_buf != NULL);
 
     lexer.output_ptr = out;
 
@@ -257,7 +225,7 @@ void yip_lexer_lex(const char* src, void** out) {
                     }
 
                     if (!empty) {
-                        _push_ident();
+                        _push_token(YIP_TOKEN_IDENTIFIER, true);
                     } else {
                         _push_token(YIP_TOKEN_NOP, false);
                     }
@@ -314,38 +282,7 @@ void yip_lexer_lex(const char* src, void** out) {
         lexer.src_offset++;
     }
 
-    yip_lexer_token_t* identtbl = arena_alloc(lexer.output_ptr, sizeof(yip_lexer_token_t) + lexer.last_ident_end + 1);
-    identtbl->type = YIP_TOKEN_IDENTTABLE;
-    memcpy(identtbl->data, lexer.ident_buf, lexer.last_ident_end);
-    identtbl->data[lexer.last_ident_end] = YIP_TOKEN_DATATERM;
-
     free(lexer.src);
     free(lexer.buffer);
-    free(lexer.ident_buf);
-}
-
-char* yip_lexer_get_identtable_string(char* idtable_data, int idx) {
-    if (idtable_data != lexer.identtbl_last_buf) {
-        lexer.identtbl_last_buf = idtable_data;
-        lexer.identtbl_last_offset = 0;
-        lexer.identtbl_last_idx = 0;
-    }
-
-    int curidx = idx >= lexer.identtbl_last_idx ? lexer.identtbl_last_idx : 0;
-    uintptr_t offset = idx >= lexer.identtbl_last_idx ? lexer.identtbl_last_offset : 0;
-    while (curidx < idx) {
-        if ((uint8_t)idtable_data[offset] == YIP_TOKEN_DATATERM) {
-            goto fail;
-        } else if (idtable_data[offset] == '\0') {
-            curidx++;
-        }
-        offset++;
-    }
-    return strdup(idtable_data + offset);
-
-    fail:
-    lexer.identtbl_last_buf = NULL;
-    lexer.identtbl_last_offset = 0;
-    lexer.identtbl_last_idx = 0;
-    return NULL;
+    arena_free(lexer.data_buf);
 }

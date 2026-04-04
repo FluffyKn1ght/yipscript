@@ -1,6 +1,7 @@
 #ifndef _YIPSCRIPT_LEXER_H
 #define _YIPSCRIPT_LEXER_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
 typedef enum: uint8_t {
@@ -61,14 +62,13 @@ typedef enum: uint8_t {
     YIP_TOKEN_KW_RETURN = 0x4F,
 
     YIP_TOKEN_NOP = 0xF0,
-    YIP_TOKEN_IDENTTABLE = 0xF1,
-    YIP_TOKEN_EOF = 0xFA,
-    YIP_TOKEN_DATATERM = 0xFF
+    YIP_TOKEN_EOF = 0xFF,
 } yip_lexer_token_type_t;
 
 typedef struct {
     yip_lexer_token_type_t type;
-    char data[]; // 0xFF-terminated
+    bool is_data_int;
+    char* data;
 } yip_lexer_token_t;
 
 void yip_lexer_lex(const char* src, void** out);
