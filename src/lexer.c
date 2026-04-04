@@ -10,7 +10,7 @@
 #include <string.h>
 #include "align.h"
 
-typedef struct {
+static struct {
     char* src;
     uint64_t src_length;
     uint64_t src_offset;
@@ -24,8 +24,7 @@ typedef struct {
     void** output_ptr;
 
     bool last_tkn_was_nop;
-} yip_lexer;
-static yip_lexer lexer = {};
+} lexer = {};
 
 #define CLEAR_BUF() memset(lexer.buffer, 0, lexer.buf_capacity)
 #define BUF_MATCHES(what) strcmp(lexer.buffer, (what)) == 0
@@ -149,7 +148,7 @@ void yip_lexer_lex(const char* src, void** out) {
         arena_free(lexer.data_buf);
     }
 
-    memset(&lexer, 0, sizeof(yip_lexer));
+    memset(&lexer, 0, sizeof(lexer));
 
     lexer.buf_capacity = 32;
     lexer.buffer = calloc(1, lexer.buf_capacity);
