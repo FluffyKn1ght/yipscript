@@ -110,7 +110,7 @@ static void _buf_read_until_char(char c) {
 static void _push_token(yip_lexer_token_type_t type, bool include_buffer) {
     yip_lexer_token_t* tkn = arena_alloc(
         lexer.output_ptr,
-        sizeof(yip_lexer_token_t) + (include_buffer ? sizeof(char*) : 0)
+        sizeof(yip_lexer_token_t)
     );
     tkn->type = type;
     if (include_buffer) {

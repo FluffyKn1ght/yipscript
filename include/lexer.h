@@ -67,7 +67,6 @@ typedef enum: uint8_t {
 
 typedef struct {
     yip_lexer_token_type_t type;
-    bool is_data_int;
     char* data;
 } yip_lexer_token_t;
 
