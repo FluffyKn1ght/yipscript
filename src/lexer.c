@@ -272,7 +272,7 @@ void yip_lexer_lex(const char* src, void** out) {
                 case '\'': {
                     CLEAR_BUF();
                     lexer.src_offset++;
-                    _buf_read_until_char('"');
+                    _buf_read_until_char('\'');
                     _push_token(YIP_TOKEN_LIT_STRING, true);
                     break;
                 }
