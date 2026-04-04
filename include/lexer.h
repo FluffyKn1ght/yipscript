@@ -70,7 +70,6 @@ typedef struct {
     char* data;
 } yip_lexer_token_t;
 
-void yip_lexer_lex(const char* src, void** out);
-uintptr_t yip_lexer_gettoken(yip_lexer_token_t** token_ptr);
+void yip_lex(const char* src, void** out);
 
 #endif
